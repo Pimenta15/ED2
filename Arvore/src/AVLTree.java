@@ -6,7 +6,24 @@ import java.util.Queue;
 public class AVLTree<T extends Comparable<T>> {
 
     private AVLNode<T> root;
+
     private boolean status;
+    
+    public boolean isStatus() {
+        return status;
+    }
+
+    public void setStatus(boolean status) {
+        this.status = status;
+    }
+
+    public AVLNode<T> getRoot() {
+        return root;
+    }
+
+    public void setRoot(AVLNode<T> root) {
+        this.root = root;
+    }
 
     // Código dos métodos aqui
 
@@ -88,15 +105,16 @@ public class AVLTree<T extends Comparable<T>> {
             this.status = false;
             return c;
         }
-        // rotação simples
-        a.setRight(b.getLeft());
-        b.setLeft(a);
-        // fatball
-        a.setFatBal(0);
-        b.setFatBal(0);
-        this.status = false;
-        return b;
-    }
+            // rotação simples
+            a.setRight(b.getLeft());
+            b.setLeft(a);
+            // fatball
+            a.setFatBal(0);
+            b.setFatBal(0);
+            this.status = false;
+            return b;
+        }
+    
 
     private AVLNode<T> rotateRight(AVLNode<T> a) {
         AVLNode<T> b = a.getLeft();
@@ -122,15 +140,17 @@ public class AVLTree<T extends Comparable<T>> {
             this.status = false;
             return c;
         }
-        // rotação simples
-        a.setLeft(b.getRight());
-        b.setRight(a);
-        // fatball
-        a.setFatBal(0);
-        b.setFatBal(0);
-        this.status = false;
-        return b;
-    }
+            // rotação simples
+            a.setLeft(b.getRight());
+            b.setRight(a);
+            // fatball
+            a.setFatBal(0);
+            b.setFatBal(0);
+            this.status = false;
+            return b;
+
+        }
+    
 
     public void Ordem() {
         emOrdem(root);
@@ -139,7 +159,7 @@ public class AVLTree<T extends Comparable<T>> {
     private void emOrdem(AVLNode<T> node) {
         if (node != null) {
             emOrdem(node.getLeft());
-            System.out.print(node.getInfo() + " ");
+            System.out.print(node.getInfo() +"/"+node.getFatBal()+ " ");
             emOrdem(node.getRight());
         }
     }
@@ -155,7 +175,7 @@ public class AVLTree<T extends Comparable<T>> {
             if (node == null) {
                 System.out.print("nulo ");
             } else {
-                System.out.print(node.getInfo() + " ");
+                System.out.print(node.getInfo() +"/"+node.getFatBal()+ " ");
                 nodes.add(node.getLeft());
                 nodes.add(node.getRight());
             }
@@ -166,13 +186,121 @@ public class AVLTree<T extends Comparable<T>> {
         if (r != null) {
             if (r.getInfo().compareTo(value)==0) {
             //Codigo de remoção
-            } else if ((r.getInfo().compareTo(value)<0)) {
+            if (r.getLeft() == null && r.getRight() ==null) {
+                //caso 1(nenhum filho)
+                r = null;
+            }else if(r.getRight()!=null && r.getLeft()==null){
+                //caso2a(1 filho a direita)
+                r = r.getRight();
+            }else if(r.getRight()==null && r.getLeft()!=null){
+               //caso2a(1 filho a esquerda)
+                r = r.getLeft();
+            }else{
+                //caso 3 (dois filhos)
+                AVLNode<T> subTreeL;
+                T maior;
+                if (r == this.root) {
+                    subTreeL = this.root.getLeft();
+                    if (subTreeL.getRight() == null) {
+                        maior = subTreeL.getInfo();
+                    }else{
+                        maior = descer(subTreeL,subTreeL).getInfo();
+                    }
+                    this.root.setInfo(maior);
+                }else{
+                    AVLNode<T> aux = r.getLeft();
+                    aux = descer(aux,aux);
+                    r.setInfo(aux.getInfo());
+                    if (r.getLeft() == aux) {
+                        r.setLeft(null);
+                        switch (r.getFatBal()) {
+                            case 0:
+                                r.setFatBal(1);
+                                break;
+                            case 1:
+                                r = this.rotateLeft(r);
+                                break;
+                            case -1:
+                                r.setFatBal(0);
+                                break;
+                        }
+                    }
+                }
+               
+            }
+            this.status = true;
+
+            } else if ((r.getInfo().compareTo(value)>0)) {
                 r.setLeft(removeNode(r.getLeft(), value));
+                if (status) {
+                    
+                    switch (r.getFatBal()) {
+                        case 1:
+                            r = this.rotateLeft(r);
+                            break;
+                        case 0:
+                            r.setFatBal(1);
+                            
+                            break;
+                        case -1:
+                            r.setFatBal(0);
+                            break;
+                    }
+                }
             } else {
                 r.setRight(removeNode(r.getRight(), value));
+               if (status) {
+                    
+                    switch (r.getFatBal()) {
+                        case 1:
+                            r.setFatBal(0);
+                            break;
+                        case 0:
+                            r.setFatBal(-1);
+                            break;
+                        case -1:
+                            r = this.rotateRight(r);
+                            break;
+                    }
+                }
             }
+            
         }
         return r;
+    }
+    
+    private AVLNode<T> descer(AVLNode<T> atual, AVLNode<T> maior){
+        
+        if (atual.getRight() !=null) {
+            maior = descer(atual.getRight(),maior);
+            
+                
+                switch (atual.getFatBal()) {
+                    case 0:
+                        atual.setFatBal(-1);
+                        break;
+                    case 1:
+                        atual.setFatBal(0);
+                        break;
+                    case -1:
+                        //atual = rotateRight(atual); 
+                        break;
+                
+            }
+        }
+        if (atual.getRight()== null) {
+            maior = atual;
+        }
+        if (atual.getRight() == maior) {
+            if (maior.getLeft()!= null) {
+                atual.setRight(maior.getLeft());
+                
+            }else{
+                atual.setRight(null);
+            }
+        }
+       
+        return maior;
     }
 
 }

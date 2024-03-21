@@ -39,4 +39,6 @@ class AVLNode<T extends Comparable<T>> {
     int getFatBal() {
         return this.fatBal;
     }
+
+    
 } 
